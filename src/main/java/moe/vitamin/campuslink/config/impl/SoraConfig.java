@@ -1,4 +1,4 @@
-package moe.vitamin.campuslink.config;
+package moe.vitamin.campuslink.config.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

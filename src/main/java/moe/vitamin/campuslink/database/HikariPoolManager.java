@@ -1,7 +1,7 @@
 package moe.vitamin.campuslink.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import moe.vitamin.campuslink.config.DatabaseConfig;
+import moe.vitamin.campuslink.config.impl.DatabaseConfig;
 
 public class HikariPoolManager {
 
