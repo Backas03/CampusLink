@@ -1,14 +1,2 @@
 discord:
   bot-token: ""
-
-database:
-  url: ""
-  username: ""
-  password: ""
-  hikari-cp:
-    maximum-pool-size: 10
-    minimum-idle: 10
-    max-lifetime: 1800000
-    connection-timeout: 30000
-    idle-timeout: 600000
-    pool-name: "CampusLink-Sora-HikariPool"
