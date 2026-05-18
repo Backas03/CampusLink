@@ -29,15 +29,19 @@ public class DatabaseConfig extends YamlConfig {
         super.load();
 
         YamlNode databaseNode = getNode("database");
+        YamlNode hikariNode = databaseNode.getNode("hikari-cp");
         this.driverClassName = databaseNode.getString("driver-class-name");
         this.jdbcUrl = databaseNode.getString("url");
         this.username = databaseNode.getString("username");
         this.password = databaseNode.getString("password");
-        this.maximumPoolSize = databaseNode.getIntOrDefault("maximum-pool-size", 10);
-        this.minimumIdle = databaseNode.getIntOrDefault("minimum-idle", 2);
-        this.maximumLifetime = databaseNode.getLongOrDefault("maximum-lifetime", 1800000L);
-        this.connectionTimeout = databaseNode.getLongOrDefault("connection-timeout", 30000L);
-        this.idleTimeout = databaseNode.getLongOrDefault("idle-timeout", 600000L);
-        this.poolName = databaseNode.getStringOrDefault("pool-name", "CampusLink-HikariPool");
+        this.maximumPoolSize = hikariNode.getIntOrDefault("maximum-pool-size", 10);
+        this.minimumIdle = hikariNode.getIntOrDefault("minimum-idle", 2);
+        this.maximumLifetime = hikariNode.getLongOrDefault(
+                "max-lifetime",
+                hikariNode.getLongOrDefault("maximum-lifetime", 1800000L)
+        );
+        this.connectionTimeout = hikariNode.getLongOrDefault("connection-timeout", 30000L);
+        this.idleTimeout = hikariNode.getLongOrDefault("idle-timeout", 600000L);
+        this.poolName = hikariNode.getStringOrDefault("pool-name", "CampusLink-HikariPool");
     }
 }
