@@ -1,10 +1,13 @@
 package moe.vitamin.campuslink;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.discord.Sora;
 
 import java.io.File;
+import java.net.URISyntaxException;
 
+@Slf4j
 public class CampusLink {
 
     @Getter
@@ -26,6 +29,16 @@ public class CampusLink {
     }
 
     public File getDataFolder() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try {
+            File jarFile = new File(CampusLink.class.getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
+            return jarFile.getParentFile();
+        } catch (URISyntaxException e) {
+            log.error("Failed to get data folder", e);
+        }
+        return null;
     }
+
 }
