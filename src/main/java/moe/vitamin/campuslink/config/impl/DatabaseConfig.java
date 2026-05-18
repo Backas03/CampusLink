@@ -22,7 +22,6 @@ public class DatabaseConfig extends YamlConfig {
 
     public DatabaseConfig(File file) {
         super(file);
-        load();
     }
 
     @Override
