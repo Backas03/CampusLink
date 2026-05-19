@@ -1,11 +1,13 @@
 package moe.vitamin.campuslink.config;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class YamlConfig {
 
     @Getter
@@ -49,7 +51,6 @@ public class YamlConfig {
         this.file = file;
         this.yaml = new Yaml();
         this.data = new HashMap<>();
-        load();
     }
 
     public YamlConfig(String filePath) {
@@ -70,8 +71,7 @@ public class YamlConfig {
             Map<String, Object> loaded = yaml.load(fis);
             this.data = (loaded != null) ? loaded : new HashMap<>();
         } catch (IOException e) {
-            System.err.println("YAML 파일 로드 실패: " + file.getAbsolutePath());
-            e.printStackTrace();
+            log.error("Failed to load yaml file. file={}", file, e);
             this.data = new HashMap<>();
         }
     }
@@ -88,8 +88,7 @@ public class YamlConfig {
                 yaml.dump(data, writer);
             }
         } catch (IOException e) {
-            System.err.println("YAML 파일 저장 실패: " + file.getAbsolutePath());
-            e.printStackTrace();
+            log.error("Failed to save yaml data to file. file={}, data={}", file, data, e);
         }
     }
 
