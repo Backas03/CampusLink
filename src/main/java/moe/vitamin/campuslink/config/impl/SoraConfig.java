@@ -1,12 +1,23 @@
 package moe.vitamin.campuslink.config.impl;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import moe.vitamin.campuslink.config.YamlConfig;
+
+import java.io.File;
 
 @Getter
-@AllArgsConstructor
-public class SoraConfig {
+public class SoraConfig extends YamlConfig {
 
-    private final String token;
+    private String token;
 
+    public SoraConfig(File file) {
+        super(file);
+    }
+
+    @Override
+    public void load() {
+        super.load();
+
+        this.token = getNode("discord").getString("bot-token");
+    }
 }
