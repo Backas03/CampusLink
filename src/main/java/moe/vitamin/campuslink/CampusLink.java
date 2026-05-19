@@ -2,9 +2,10 @@ package moe.vitamin.campuslink;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import moe.vitamin.campuslink.config.impl.SoraConfig;
 import moe.vitamin.campuslink.discord.Sora;
 
-import java.io.File;
+import java.io.*;
 import java.net.URISyntaxException;
 
 @Slf4j
@@ -15,7 +16,7 @@ public class CampusLink {
 
     public static void main(String[] args) {
         Sora sora = Sora.builder()
-                .setToken(null)
+                .setConfig(loadSoraConfig())
                 .build();
 
         instance = new CampusLink(sora);
@@ -28,7 +29,7 @@ public class CampusLink {
         this.sora = sora;
     }
 
-    public File getDataFolder() {
+    public static File getDataFolder() {
         try {
             File jarFile = new File(CampusLink.class.getProtectionDomain()
                     .getCodeSource()
@@ -41,4 +42,33 @@ public class CampusLink {
         return null;
     }
 
+    private static SoraConfig loadSoraConfig() {
+        File file = createResourceIfNotExists(new File(getDataFolder(), "sora.yaml"), "sora.yaml");
+
+        var config = new SoraConfig(file);
+        config.load();
+        return config;
+    }
+
+
+    private static File createResourceIfNotExists(File file, String resourcePath) {
+        if (!file.exists()) {
+            file.mkdirs();
+            try (InputStream in = CampusLink.class.getClassLoader().getResourceAsStream(resourcePath);
+                 OutputStream out = new FileOutputStream(file)) {
+                if (in == null) {
+                    log.error("Resource not found: " + resourcePath);
+                    return file;
+                }
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            } catch (IOException e) {
+                log.error("Failed to create resource file: {}", file.getAbsolutePath(), e);
+            }
+        }
+        return file;
+    }
 }
