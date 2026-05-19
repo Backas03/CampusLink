@@ -33,11 +33,13 @@ public class DatabaseConfig extends YamlConfig {
         this.jdbcUrl = databaseNode.getString("url");
         this.username = databaseNode.getString("username");
         this.password = databaseNode.getString("password");
-        this.maximumPoolSize = databaseNode.getIntOrDefault("maximum-pool-size", 10);
-        this.minimumIdle = databaseNode.getIntOrDefault("minimum-idle", 2);
-        this.maximumLifetime = databaseNode.getLongOrDefault("maximum-lifetime", 1800000L);
-        this.connectionTimeout = databaseNode.getLongOrDefault("connection-timeout", 30000L);
-        this.idleTimeout = databaseNode.getLongOrDefault("idle-timeout", 600000L);
-        this.poolName = databaseNode.getStringOrDefault("pool-name", "CampusLink-HikariPool");
+
+        YamlNode hikariCPNode = databaseNode.getNode("hikari-cp");
+        this.maximumPoolSize = hikariCPNode.getIntOrDefault("maximum-pool-size", 10);
+        this.minimumIdle = hikariCPNode.getIntOrDefault("minimum-idle", 2);
+        this.maximumLifetime = hikariCPNode.getLongOrDefault("max-lifetime", 1800000L);
+        this.connectionTimeout = hikariCPNode.getLongOrDefault("connection-timeout", 30000L);
+        this.idleTimeout = hikariCPNode.getLongOrDefault("idle-timeout", 600000L);
+        this.poolName = hikariCPNode.getStringOrDefault("pool-name", "CampusLink-HikariPool");
     }
 }
