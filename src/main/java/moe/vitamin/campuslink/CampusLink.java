@@ -76,7 +76,13 @@ public class CampusLink {
 
     private static File createResourceIfNotExists(File file, String resourcePath) {
         if (!file.exists()) {
-            file.mkdirs();
+            file.getParentFile().mkdirs();
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                log.error("Failed to create file. file={}", file, e);
+                return file;
+            }
             try (InputStream in = CampusLink.class.getClassLoader().getResourceAsStream(resourcePath);
                  OutputStream out = new FileOutputStream(file)) {
                 if (in == null) {
