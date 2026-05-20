@@ -59,6 +59,14 @@ tasks {
     javadoc { options.encoding = "UTF-8" }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}
+
+tasks.test {
+    jvmArgs("-Dfile.encoding=UTF-8")
+}
+
 tasks.withType<ShadowJar> {
     archiveFileName = "${project.name}.jar"
 
