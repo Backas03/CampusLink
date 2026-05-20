@@ -1,0 +1,4 @@
+discord:
+  role:
+    enabled: true
+    role-id: ""
