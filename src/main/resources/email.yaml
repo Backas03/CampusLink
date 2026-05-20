@@ -1,0 +1,7 @@
+SMTP:
+  host: "smtp.gmail.com"
+  port: 465 # TLS: 587, SSL: 465
+  auth: true
+  credential:
+    email: ""
+    app-password: ""
