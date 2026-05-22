@@ -80,4 +80,32 @@ public class ClassSearchDao {
         }
     }
 
+    @Nullable
+    public static ClassDataDto findByCourseNumber(String courseNumber) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            return context.selectFrom(DSL.table(TABLE_NAME))
+                    .where(Fields.COURSE_NUMBER.eq(courseNumber))
+                    .fetchOptional()
+                    .map(record -> ClassDataDto.builder()
+                            .grade(record.get(Fields.GRADE))
+                            .classification(record.get(Fields.CLASSIFICATION))
+                            .department(record.get(Fields.DEPARTMENT))
+                            .courseNumber(record.get(Fields.COURSE_NUMBER))
+                            .courseName(record.get(Fields.COURSE_NAME))
+                            .credits(record.get(Fields.CREDITS))
+                            .professor(record.get(Fields.PROFESSOR))
+                            .startTime(record.get(Fields.START_TIME))
+                            .endTime(record.get(Fields.END_TIME))
+                            .durationMinutes(record.get(Fields.DURATION_MINUTES))
+                            .classroom(record.get(Fields.CLASSROOM))
+                            .remarks(record.get(Fields.REMARKS))
+                            .build())
+                    .orElse(null);
+        } catch (SQLException e) {
+            log.error("Failed to query course number: {}", courseNumber, e);
+            return null;
+        }
+    }
+
 }
