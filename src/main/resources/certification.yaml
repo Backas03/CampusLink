@@ -36,7 +36,7 @@ email:
     
         <div class="command-section">
             <div class="command-desc">아래 명령어를 입력하여 인증을 완료합니다</div>
-            <div class="command">/인증 코드:{code}</div>
+            <div class="command">/인증 code:{code}</div>
         </div>
     
         <p>인증 코드를 입력하여 인증을 완료해주세요.</p>
