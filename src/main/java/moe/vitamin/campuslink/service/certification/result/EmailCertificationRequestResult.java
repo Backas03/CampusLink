@@ -31,9 +31,9 @@ public enum EmailCertificationRequestResult {
             .setFooter(CampusLink.VERSION)
     ),
     ALREADY_CERTIFIED(interaction -> new EmbedBuilder()
-            .setTitle("인증에 실패했습니다.")
+            .setTitle(interaction.getUser().getName() + " 님은 이미 인증이 완료된 상태입니다.")
+            .setDescription("인증 정보를 확인하려면 아래 명령어를 입력하세요.")
             .setColor(Color.RED)
-            .setDescription(interaction.getUser().getName() + " 님은 이미 인증이 완료된 상태입니다.")
             .addField("/인증정보", "이메일 인증 정보를 열람하실 수 있습니다.", false)
             .setTimestamp(LocalDateTime.now())
             .setFooter(CampusLink.VERSION)
