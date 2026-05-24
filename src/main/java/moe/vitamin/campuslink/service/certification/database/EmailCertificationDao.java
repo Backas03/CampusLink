@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -18,9 +19,20 @@ public class EmailCertificationDao {
 
     public static final class Fields {
 
-        public static final Field<String> EMAIL = DSL.field("email", String.class);
-        public static final Field<Long> DISCORD_USER_ID = DSL.field("discord_user_id", Long.class);
-        public static final Field<LocalDateTime> CERTIFIED_AT = DSL.field("certified_at", LocalDateTime.class);
+        public static final Field<String> EMAIL = DSL.field(
+                DSL.name("email"),
+                SQLDataType.VARCHAR(255).notNull()
+        );
+
+        public static final Field<Long> DISCORD_USER_ID = DSL.field(
+                DSL.name("discord_user_id"),
+                SQLDataType.BIGINT.notNull()
+        );
+
+        public static final Field<LocalDateTime> CERTIFIED_AT = DSL.field(
+                DSL.name("certified_at"),
+                SQLDataType.LOCALDATETIME.notNull()
+        );
 
         private Fields() {
             throw new UnsupportedOperationException();
