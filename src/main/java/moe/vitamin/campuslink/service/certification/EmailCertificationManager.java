@@ -1,5 +1,6 @@
 package moe.vitamin.campuslink.service.certification;
 
+import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.service.certification.database.EmailCertificationDao;
 import moe.vitamin.campuslink.service.certification.database.EmailCertificationData;
 import moe.vitamin.campuslink.service.certification.result.EmailCertificationRequestResult;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class EmailCertificationManager {
 
     public static EmailCertificationManager init() {
@@ -47,17 +49,19 @@ public class EmailCertificationManager {
                 }
                 this.certificationProcess.remove(user.getIdLong());
             }
+            log.info("{}", this.certificationProcess);
             if (isProcessing(user.getIdLong())) {
                 return CompletableFuture.completedFuture(EmailCertificationRequestResult.PROCESSING_PREVIOUS_REQUEST);
             }
         }
-        EmailCertificationProcess process = new EmailCertificationProcess(user, email);
-        this.certificationProcess.put(user.getIdLong(), process);
 
         return isCertified(user).thenApply(certified -> {
             if (certified) {
                 return EmailCertificationRequestResult.ALREADY_CERTIFIED;
             }
+            EmailCertificationProcess process = new EmailCertificationProcess(user, email);
+            this.certificationProcess.put(user.getIdLong(), process);
+
             Boolean emailSendResult = process.sendVerificationEmail().join();
             if (!emailSendResult) {
                 this.certificationProcess.remove(user.getIdLong());
@@ -73,12 +77,17 @@ public class EmailCertificationManager {
             return CompletableFuture.completedFuture(EmailCertificationVerificationResult.NOT_IN_PROGRESS);
         }
         return process.verifyCode(code).thenApply(result -> {
-            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH) {
+            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH
+                    || result == EmailCertificationVerificationResult.TIMEOUT
+                    || result == EmailCertificationVerificationResult.SUCCESS) {
                 this.certificationProcess.remove(user.getIdLong());
+                log.info("Email certification process for user {} has been removed due to status {} or verification result {}",
+                        user.getIdLong(), process.getStatus(), result);
             }
             return result;
         });
     }
+
 
     public boolean isValidEmail(String email) {
         return emailPattern.matcher(email).matches();
