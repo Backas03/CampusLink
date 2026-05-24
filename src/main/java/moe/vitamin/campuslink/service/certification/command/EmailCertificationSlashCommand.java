@@ -39,6 +39,10 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
 
     @Override
     public void onTriggered(SlashCommandInteractionEvent event) {
+        if (event.getGuild() == null) {
+            event.reply("DM 채널에서는 사용할 수 없는 명령어입니다.").queue();
+            return;
+        }
         User user = event.getUser();
         List<OptionMapping> options = event.getOptions();
         if (options.size() != 1) {
@@ -68,7 +72,7 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                     String code = option.getAsString();
                     CampusLink.getInstance()
                             .getEmailCertificationManager()
-                            .verifyCode(user, code)
+                            .verifyCode(user, code, event.getGuild().getIdLong())
                             .thenAccept(result -> {
                                 log.info("User {} requested email certification verification with code {}, result: {}",
                                         user, code, result);

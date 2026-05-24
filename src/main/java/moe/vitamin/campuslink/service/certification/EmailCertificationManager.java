@@ -71,12 +71,12 @@ public class EmailCertificationManager {
         });
     }
 
-    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(User user, String code) {
+    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(User user, String code, long guildId) {
         EmailCertificationProcess process = this.certificationProcess.get(user.getIdLong());
         if (process == null) {
             return CompletableFuture.completedFuture(EmailCertificationVerificationResult.NOT_IN_PROGRESS);
         }
-        return process.verifyCode(code).thenApply(result -> {
+        return process.verifyCode(code, guildId).thenApply(result -> {
             if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH
                     || result == EmailCertificationVerificationResult.TIMEOUT
                     || result == EmailCertificationVerificationResult.SUCCESS) {

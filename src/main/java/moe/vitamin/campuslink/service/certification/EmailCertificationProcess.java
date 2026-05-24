@@ -81,7 +81,7 @@ public class EmailCertificationProcess {
         });
     }
 
-    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(String code) {
+    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(String code, long guildId) {
         if (status != Status.WAITING_FOR_CODE_INPUT) {
             return CompletableFuture.completedFuture(EmailCertificationVerificationResult.NOT_IN_PROGRESS);
         }
@@ -101,7 +101,7 @@ public class EmailCertificationProcess {
                 this.status = Status.WAITING_FOR_CODE_INPUT;
                 return EmailCertificationVerificationResult.INVALID_CODE;
             }
-            EmailCertificationDao.insertEmailCertification(email, user.getIdLong(), LocalDateTime.now());
+            EmailCertificationDao.insertEmailCertification(email, user.getIdLong(), guildId, LocalDateTime.now());
             // TODO: call event?, give role to user?
 
             this.status = Status.WAITING_TO_FLUSH;
