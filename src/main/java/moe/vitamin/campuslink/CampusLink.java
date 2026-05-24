@@ -34,22 +34,22 @@ public class CampusLink {
     }
 
     private final ConfigManager configManager;
-    private final Sora sora;
     private final HikariPoolManager hikariPoolManager;
 
+    private Sora sora;
     private EmailCertificationManager emailCertificationManager;
 
     private CampusLink() throws YamlConfigLoadException {
         this.configManager = new ConfigManager();
         this.configManager.reload();
 
-        this.sora = Sora.builder()
-                .setConfig(configManager.getSoraConfig())
-                .build();
         this.hikariPoolManager = new HikariPoolManager(configManager.loadDatabaseConfig());
     }
 
     private void loadServices() {
+        this.sora = Sora.builder()
+                .setConfig(configManager.getSoraConfig())
+                .build();
         this.emailCertificationManager = EmailCertificationManager.init();
     }
 

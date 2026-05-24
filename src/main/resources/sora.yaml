@@ -1,2 +1,6 @@
 discord:
   bot-token: ""
+
+command:
+  chat:
+    prefix: "!"
