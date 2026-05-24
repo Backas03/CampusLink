@@ -91,4 +91,22 @@ public class EmailCertificationDao {
             return null;
         }
     }
+
+    public static void saveEmailCertificationData(EmailCertificationData data) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            context.insertInto(DSL.table(TABLE_NAME),
+                            Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
+                    .values(data.getEmail(), data.getDiscordUserId(), data.getCertifiedAt())
+                    .onDuplicateKeyUpdate()
+                    .set(Fields.CERTIFIED_AT, data.getCertifiedAt())
+                    .execute();
+        } catch (SQLException e) {
+            log.error("Failed to save email certification data for discord user id: {}", data.getDiscordUserId(), e);
+        }
+    }
+
+    public static void insertEmailCertification(String email, long discordUserId, LocalDateTime certifiedAt) {
+        saveEmailCertificationData(new EmailCertificationData(email, discordUserId, certifiedAt));
+    }
 }
