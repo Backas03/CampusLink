@@ -27,12 +27,29 @@ public class EmailCertificationManager {
         this.certificationProcess = new HashMap<>();
     }
 
+    public boolean isProcessing(long discordUserId) {
+        return this.certificationProcess.containsKey(discordUserId);
+    }
+
     public CompletableFuture<EmailCertificationRequestResult> requestCertification(
-            String email,
-            User user
+            User user,
+            String email
     ) {
         if (!isValidEmail(email)) {
             return CompletableFuture.completedFuture(EmailCertificationRequestResult.INVALID_EMAIL);
+        }
+        if (isProcessing(user.getIdLong())) {
+            EmailCertificationProcess process = this.certificationProcess.get(user.getIdLong());
+            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_FOR_CODE_INPUT) {
+                if (!process.isExpireFlag()) {
+                    process.setExpireFlag(true);
+                    return CompletableFuture.completedFuture(EmailCertificationRequestResult.CONFIRM_CLEAR_PROGRESS);
+                }
+                this.certificationProcess.remove(user.getIdLong());
+            }
+            if (isProcessing(user.getIdLong())) {
+                return CompletableFuture.completedFuture(EmailCertificationRequestResult.PROCESSING_PREVIOUS_REQUEST);
+            }
         }
         EmailCertificationProcess process = new EmailCertificationProcess(user, email);
         this.certificationProcess.put(user.getIdLong(), process);
@@ -44,7 +61,7 @@ public class EmailCertificationManager {
             Boolean emailSendResult = process.sendVerificationEmail().join();
             if (!emailSendResult) {
                 this.certificationProcess.remove(user.getIdLong());
-                return EmailCertificationRequestResult.FAILED;
+                return EmailCertificationRequestResult.EMAIL_SEND_FAILED;
             }
             return EmailCertificationRequestResult.SUCCESS;
         });
