@@ -1,10 +1,5 @@
-discord:
-  role:
-    enabled: true
-    role-id: ""
-
 email:
-  title: "대구대학교 재(휴, 졸)학생 인증 메일입니다."
+  subject: "대구대학교 학생 인증 메일입니다."
   html:
     |
     <!DOCTYPE html>
