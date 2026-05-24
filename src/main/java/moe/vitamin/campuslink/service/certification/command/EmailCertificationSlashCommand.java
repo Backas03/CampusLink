@@ -92,6 +92,22 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setFooter(CampusLink.VERSION);
                                         interactionHook.editOriginalEmbeds(builder.build()).queue();
                                     }
+                                    case EXPIRED -> {
+                                        EmbedBuilder builder = new EmbedBuilder()
+                                                .setColor(Color.decode("#d90000"))
+                                                .setTitle("인증에 실패했습니다.")
+                                                .addField("인증 코드의 유효 기간이 만료되었습니다.", "재인증을 원하시면 /인증 email:[이메일] 명령어를 다시 입력해주세요.", false)
+                                                .setFooter(CampusLink.VERSION);
+                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                    }
+                                    case NOT_IN_PROGRESS -> {
+                                        EmbedBuilder builder = new EmbedBuilder()
+                                                .setColor(Color.decode("#d90000"))
+                                                .setTitle("인증에 실패했습니다.")
+                                                .addField("인증 진행 중인 요청이 없습니다.", "인증을 진행하려면 /인증 email:[이메일] 명령어를 입력해주세요.", false)
+                                                .setFooter(CampusLink.VERSION);
+                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                    }
                                     case null, default -> {
                                         EmbedBuilder builder = new EmbedBuilder()
                                                 .setColor(Color.decode("#d90000"))
