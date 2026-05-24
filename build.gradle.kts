@@ -26,6 +26,7 @@ dependencies {
     implementation("org.jooq:jooq:3.19.8")
     implementation("com.zaxxer:HikariCP:6.3.3")
     implementation("org.yaml:snakeyaml:2.2")
+    implementation("org.eclipse.angus:angus-mail:2.0.5")
 
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.5.32")
