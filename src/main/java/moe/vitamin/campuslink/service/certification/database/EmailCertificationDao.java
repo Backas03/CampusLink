@@ -79,7 +79,7 @@ public class EmailCertificationDao {
         }
     }
 
-    public static EmailCertificationData loadCertificationData(String email) {
+    public static EmailCertificationData loadCertificationDataFromEmail(String email) {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
             var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
