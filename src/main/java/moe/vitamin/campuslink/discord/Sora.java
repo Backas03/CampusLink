@@ -5,6 +5,8 @@ import lombok.Getter;
 import moe.vitamin.campuslink.command.CommandManager;
 import moe.vitamin.campuslink.command.impl.HelpSlashCommand;
 import moe.vitamin.campuslink.command.impl.ReloadConfigChatCommand;
+import moe.vitamin.campuslink.service.certification.command.EmailCertificationInfoSlashCommand;
+import moe.vitamin.campuslink.service.certification.command.EmailCertificationSlashCommand;
 import net.dv8tion.jda.api.JDA;
 
 @Getter
@@ -33,7 +35,9 @@ public class Sora {
     private void registerCommands() {
         commandManager.registerSlashCommand(new HelpSlashCommand());
         commandManager.registerChatCommand("reload", new ReloadConfigChatCommand());
-        // TODO: register commands
+
+        commandManager.registerSlashCommand(new EmailCertificationSlashCommand());
+        commandManager.registerSlashCommand(new EmailCertificationInfoSlashCommand());
     }
 
 }
