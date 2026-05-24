@@ -1,3 +1,7 @@
+certification:
+  expire-after: 180000 # ms, default: 3minutes
+  process-timeout-threshold: 5000 # ms, default: 5seconds
+
 email:
   subject: "대구대학교 학생 인증 메일입니다."
   html:
@@ -32,13 +36,13 @@ email:
     
         <div class="command-section">
             <div class="command-desc">아래 명령어를 입력하여 인증을 완료합니다</div>
-            <div class="command">{full_command}</div>
+            <div class="command">/인증 코드:{code}</div>
         </div>
     
         <p>인증 코드를 입력하여 인증을 완료해주세요.</p>
     
         <hr class="divider">
     
-        <p class="warning">⚠️ 주의: 인증 코드를 타인에게 공유하지 마세요</p>
+        <p class="warning">⚠️ 주의: 절대로 인증 코드를 타인에게 공유하지 마세요</p>
     </body>
     </html>
