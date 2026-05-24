@@ -28,7 +28,7 @@ public class SoraBuilder {
                 .enableCache(CacheFlag.ROLE_TAGS)
                 .build();
 
-        return new Sora(jda, config);
+        return new Sora(jda);
     }
 
 }
