@@ -12,6 +12,9 @@ public class CertificationConfig extends YamlConfig {
     private String emailSubject;
     private String plainHTMLMessage;
 
+    private long verificationExpireTimeMs;
+    private long processTimeoutThreshold;
+
     public CertificationConfig(File file) {
         super(file);
     }
@@ -23,5 +26,9 @@ public class CertificationConfig extends YamlConfig {
         YamlNode emailNode = getNode("email");
         this.emailSubject = emailNode.getString("subject");
         this.plainHTMLMessage = emailNode.getString("html");
+
+        YamlNode certificationNode = getNode("certification");
+        this.verificationExpireTimeMs = certificationNode.getLongOrDefault("expire-after", 3 * 60 * 1000L);
+        this.processTimeoutThreshold = certificationNode.getLongOrDefault("process-timeout-threshold", 5 * 1000L);
     }
 }
