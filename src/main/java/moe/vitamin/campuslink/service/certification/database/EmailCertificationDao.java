@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -18,9 +19,20 @@ public class EmailCertificationDao {
 
     public static final class Fields {
 
-        public static final Field<String> EMAIL = DSL.field("email", String.class);
-        public static final Field<Long> DISCORD_USER_ID = DSL.field("discord_user_id", Long.class);
-        public static final Field<LocalDateTime> CERTIFIED_AT = DSL.field("certified_at", LocalDateTime.class);
+        public static final Field<String> EMAIL = DSL.field(
+                DSL.name("email"),
+                SQLDataType.VARCHAR(255).notNull()
+        );
+
+        public static final Field<Long> DISCORD_USER_ID = DSL.field(
+                DSL.name("discord_user_id"),
+                SQLDataType.BIGINT.notNull()
+        );
+
+        public static final Field<LocalDateTime> CERTIFIED_AT = DSL.field(
+                DSL.name("certified_at"),
+                SQLDataType.LOCALDATETIME.notNull()
+        );
 
         private Fields() {
             throw new UnsupportedOperationException();
@@ -90,5 +102,23 @@ public class EmailCertificationDao {
             log.error("Failed to load email certification data for email: {}", email, e);
             return null;
         }
+    }
+
+    public static void saveEmailCertificationData(EmailCertificationData data) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            context.insertInto(DSL.table(TABLE_NAME),
+                            Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
+                    .values(data.getEmail(), data.getDiscordUserId(), data.getCertifiedAt())
+                    .onDuplicateKeyUpdate()
+                    .set(Fields.CERTIFIED_AT, data.getCertifiedAt())
+                    .execute();
+        } catch (SQLException e) {
+            log.error("Failed to save email certification data for discord user id: {}", data.getDiscordUserId(), e);
+        }
+    }
+
+    public static void insertEmailCertification(String email, long discordUserId, LocalDateTime certifiedAt) {
+        saveEmailCertificationData(new EmailCertificationData(email, discordUserId, certifiedAt));
     }
 }

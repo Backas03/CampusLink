@@ -1,4 +1,4 @@
-package moe.vitamin.campuslink.config;
+package moe.vitamin.campuslink.config.yaml;
 
 import lombok.Getter;
 

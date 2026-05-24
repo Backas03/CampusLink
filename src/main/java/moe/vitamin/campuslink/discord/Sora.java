@@ -10,11 +10,9 @@ public class Sora {
     }
 
     private final JDA jda;
-    private final SoraConfig config;
 
-    protected Sora(JDA jda, SoraConfig config) {
+    protected Sora(JDA jda) {
         this.jda = jda;
-        this.config = config;
     }
 
     public JDA getJDA() {

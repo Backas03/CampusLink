@@ -25,7 +25,9 @@ dependencies {
     implementation("net.dv8tion:JDA:6.4.1")
     implementation("org.jooq:jooq:3.19.8")
     implementation("com.zaxxer:HikariCP:6.3.3")
+    implementation("com.mysql:mysql-connector-j:9.7.0")
     implementation("org.yaml:snakeyaml:2.2")
+    implementation("org.eclipse.angus:angus-mail:2.0.5")
 
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.5.32")
