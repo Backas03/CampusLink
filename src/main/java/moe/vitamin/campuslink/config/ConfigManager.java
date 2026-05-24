@@ -36,6 +36,8 @@ public class ConfigManager {
     }
 
     public void reload() throws YamlConfigLoadException {
+        createResourceIfNotExists(getDatabaseConfigFile());
+
         this.soraConfig = loadSoraConfig();
         this.emailConfig = loadEmailConfig();
         this.certificationConfig = loadCertificationConfig();
