@@ -19,10 +19,9 @@ public class CampusLink {
     private static CampusLink instance;
 
     public static void main(String[] args) {
-        ConfigManager configManager = new ConfigManager();
         try {
-            configManager.reload();
-            instance = new CampusLink(configManager);
+            instance = new CampusLink();
+            instance.loadServices();
         } catch (YamlConfigLoadException e) {
             log.error("Failed to load config file: {}. Please check your file and try load manually again.", e.getFile(), e);
         }
@@ -31,17 +30,22 @@ public class CampusLink {
     private final ConfigManager configManager;
     private final Sora sora;
     private final HikariPoolManager hikariPoolManager;
-    private final EmailCertificationManager emailCertificationManager;
 
-    private CampusLink(ConfigManager configManager) throws YamlConfigLoadException {
-        this.configManager = configManager;
+    private EmailCertificationManager emailCertificationManager;
+
+    private CampusLink() throws YamlConfigLoadException {
+        this.configManager = new ConfigManager();
+        this.configManager.reload();
+
         this.sora = Sora.builder()
                 .setConfig(configManager.getSoraConfig())
                 .build();
         this.hikariPoolManager = new HikariPoolManager(configManager.loadDatabaseConfig());
-        this.emailCertificationManager = EmailCertificationManager.init();
     }
 
+    private void loadServices() {
+        this.emailCertificationManager = EmailCertificationManager.init();
+    }
 
     public static File getDataFolder() {
         try {
