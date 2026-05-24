@@ -110,7 +110,20 @@ public class EmailCertificationProcess {
             log.error("Failed to verify email certification code for user {}", user.getIdLong(), e);
             this.status = Status.WAITING_TO_FLUSH;
             return EmailCertificationVerificationResult.INTERNAL_ERROR;
-        }).orTimeout(certificationConfig.getProcessTimeoutThreshold(), TimeUnit.MILLISECONDS);
+        }).completeOnTimeout(EmailCertificationVerificationResult.TIMEOUT,
+                certificationConfig.getProcessTimeoutThreshold(),
+                TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public String toString() {
+        return "EmailCertificationProcess{" +
+                "user=" + user +
+                ", email='" + email + '\'' +
+                ", verificationCode='" + verificationCode + '\'' +
+                ", status=" + status +
+                ", expireFlag=" + expireFlag +
+                ", emailSendAt=" + emailSendAt +
+                '}';
+    }
 }
