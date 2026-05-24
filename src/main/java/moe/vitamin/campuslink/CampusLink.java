@@ -24,6 +24,12 @@ public class CampusLink {
             instance.loadServices();
         } catch (YamlConfigLoadException e) {
             log.error("Failed to load config file: {}. Please check your file and try load manually again.", e.getFile(), e);
+        } finally {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (instance != null) {
+                    instance.close();
+                }
+            }));
         }
     }
 
@@ -45,6 +51,10 @@ public class CampusLink {
 
     private void loadServices() {
         this.emailCertificationManager = EmailCertificationManager.init();
+    }
+
+    public void close() {
+        if (hikariPoolManager != null) hikariPoolManager.close();
     }
 
     public static File getDataFolder() {
