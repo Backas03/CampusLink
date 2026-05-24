@@ -9,6 +9,7 @@ import java.io.File;
 public class SoraConfig extends YamlConfig {
 
     private String token;
+    private String chatCommandPrefix;
 
     public SoraConfig(File file) {
         super(file);
@@ -19,5 +20,8 @@ public class SoraConfig extends YamlConfig {
         super.load();
 
         this.token = getNode("discord").getString("bot-token");
+        this.chatCommandPrefix = getNode("command")
+                .getNode("chat")
+                .getStringOrDefault("prefix", "!");
     }
 }
