@@ -1,0 +1,4 @@
+class-list:
+  command-prefix: "목록"
+  command-permission: "a.a"
+  command-description: "강의 목록을 보여주는 커멘드입니다"
