@@ -1,24 +1,39 @@
 package moe.vitamin.campuslink.discord;
 
-import moe.vitamin.campuslink.config.impl.SoraConfig;
+import lombok.AccessLevel;
+import lombok.Getter;
+import moe.vitamin.campuslink.command.CommandManager;
+import moe.vitamin.campuslink.command.impl.HelpSlashCommand;
+import moe.vitamin.campuslink.command.impl.ReloadConfigChatCommand;
 import net.dv8tion.jda.api.JDA;
 
+@Getter
 public class Sora {
 
     public static SoraBuilder builder() {
         return new SoraBuilder();
     }
 
+    @Getter(AccessLevel.NONE)
     private final JDA jda;
-    private final SoraConfig config;
+    private final CommandManager commandManager;
 
-    protected Sora(JDA jda, SoraConfig config) {
+    protected Sora(JDA jda) {
         this.jda = jda;
-        this.config = config;
+
+        this.commandManager = new CommandManager(this);
+        this.commandManager.init();
+        registerCommands();
     }
 
     public JDA getJDA() {
         return jda;
+    }
+
+    private void registerCommands() {
+        commandManager.registerSlashCommand(new HelpSlashCommand());
+        commandManager.registerChatCommand("reload", new ReloadConfigChatCommand());
+        // TODO: register commands
     }
 
 }

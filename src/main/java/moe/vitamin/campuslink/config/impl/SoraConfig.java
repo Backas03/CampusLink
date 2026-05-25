@@ -1,7 +1,7 @@
 package moe.vitamin.campuslink.config.impl;
 
 import lombok.Getter;
-import moe.vitamin.campuslink.config.YamlConfig;
+import moe.vitamin.campuslink.config.yaml.YamlConfig;
 
 import java.io.File;
 
@@ -9,6 +9,7 @@ import java.io.File;
 public class SoraConfig extends YamlConfig {
 
     private String token;
+    private String chatCommandPrefix;
 
     public SoraConfig(File file) {
         super(file);
@@ -19,5 +20,8 @@ public class SoraConfig extends YamlConfig {
         super.load();
 
         this.token = getNode("discord").getString("bot-token");
+        this.chatCommandPrefix = getNode("command")
+                .getNode("chat")
+                .getStringOrDefault("prefix", "!");
     }
 }

@@ -1,8 +1,8 @@
 package moe.vitamin.campuslink.config.impl;
 
 import lombok.Getter;
-import moe.vitamin.campuslink.config.YamlConfig;
-import moe.vitamin.campuslink.config.YamlNode;
+import moe.vitamin.campuslink.config.yaml.YamlConfig;
+import moe.vitamin.campuslink.config.yaml.YamlNode;
 
 import java.io.File;
 
