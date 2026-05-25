@@ -22,4 +22,5 @@ public class ClassDataDto {
     private final Integer durationMinutes;
     private final String classroom;
     private final String remarks;
+    private final String dayOfWeek;
 }
