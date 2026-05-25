@@ -5,6 +5,7 @@ import moe.vitamin.campuslink.CampusLink;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.Publisher;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
@@ -29,10 +30,16 @@ public class EmailCertificationDao {
                 SQLDataType.BIGINT.notNull()
         );
 
+        public static final Field<Long> CERTIFIED_GUILD_AT = DSL.field(
+                DSL.name("guild_id"),
+                SQLDataType.BIGINT.notNull()
+        );
+
         public static final Field<LocalDateTime> CERTIFIED_AT = DSL.field(
                 DSL.name("certified_at"),
                 SQLDataType.LOCALDATETIME.notNull()
         );
+
 
         private Fields() {
             throw new UnsupportedOperationException();
@@ -57,7 +64,7 @@ public class EmailCertificationDao {
     public static EmailCertificationData loadCertificationData(long discordUserId) {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
-            var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
+            var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_GUILD_AT, Fields.CERTIFIED_AT)
                     .from(TABLE_NAME)
                     .where(Fields.DISCORD_USER_ID.eq(discordUserId))
                     .fetch();
@@ -71,7 +78,8 @@ public class EmailCertificationDao {
             return new EmailCertificationData(
                     result.value1(),
                     result.value2(),
-                    result.value3()
+                    result.value3(),
+                    result.value4()
             );
         } catch (SQLException e) {
             log.error("Failed to load email certification data for discord user id: {}", discordUserId, e);
@@ -79,10 +87,10 @@ public class EmailCertificationDao {
         }
     }
 
-    public static EmailCertificationData loadCertificationData(String email) {
+    public static EmailCertificationData loadCertificationDataFromEmail(String email) {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
-            var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
+            var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_GUILD_AT, Fields.CERTIFIED_AT)
                     .from(TABLE_NAME)
                     .where(Fields.EMAIL.eq(email))
                     .fetch();
@@ -96,7 +104,8 @@ public class EmailCertificationDao {
             return new EmailCertificationData(
                     result.value1(),
                     result.value2(),
-                    result.value3()
+                    result.value3(),
+                    result.value4()
             );
         } catch (SQLException e) {
             log.error("Failed to load email certification data for email: {}", email, e);
@@ -118,7 +127,20 @@ public class EmailCertificationDao {
         }
     }
 
-    public static void insertEmailCertification(String email, long discordUserId, LocalDateTime certifiedAt) {
-        saveEmailCertificationData(new EmailCertificationData(email, discordUserId, certifiedAt));
+    public static void insertEmailCertification(String email, long discordUserId, long guildId, LocalDateTime certifiedAt) {
+        saveEmailCertificationData(new EmailCertificationData(email, discordUserId, guildId, certifiedAt));
+    }
+
+    public static void removeEmailCertificationData(long discordUserid, long guildId) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            context.delete(DSL.table(TABLE_NAME))
+                    .where(Fields.DISCORD_USER_ID.eq(discordUserid)
+                            .and(Fields.CERTIFIED_GUILD_AT.eq(guildId)))
+                    .execute();
+            log.info("Removed email certification data for discord user id: {} and guild id: {}", discordUserid, guildId);
+        } catch (SQLException e) {
+            log.error("Failed to remove email certification data for discord user id: {} and guild id: {}", discordUserid, guildId, e);
+        }
     }
 }

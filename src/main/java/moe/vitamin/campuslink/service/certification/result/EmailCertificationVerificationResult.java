@@ -8,4 +8,5 @@ public enum EmailCertificationVerificationResult {
     INTERNAL_ERROR,
     TIMEOUT,
     SUCCESS
+
 }
