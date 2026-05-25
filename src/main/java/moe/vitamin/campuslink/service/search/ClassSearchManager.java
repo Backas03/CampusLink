@@ -1,6 +1,8 @@
 package moe.vitamin.campuslink.service.search;
 
 import lombok.extern.slf4j.Slf4j;
+import moe.vitamin.campuslink.CampusLink;
+import moe.vitamin.campuslink.command.impl.ClassSearchSlashCommand;
 import moe.vitamin.campuslink.service.search.database.ClassSearchDao;
 
 import java.io.*;
@@ -21,6 +23,21 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class ClassSearchManager {
+
+    private final ClassSearchDao classSearchDao;
+
+    public static ClassSearchManager init() {
+        ClassSearchDao.init();
+        return new ClassSearchManager();
+    }
+
+    private ClassSearchManager() {
+        this.classSearchDao = new ClassSearchDao();
+        CampusLink.getInstance()
+                .getSora()
+                .getCommandManager()
+                .registerSlashCommand(new ClassSearchSlashCommand(this));
+    }
 
     private static final Pattern TIME_PATTERN = Pattern.compile("([월화수목금토일])\\((\\d{2}:\\d{2})~(\\d{2}:\\d{2})\\)");
 
