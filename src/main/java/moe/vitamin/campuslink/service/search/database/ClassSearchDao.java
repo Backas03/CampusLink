@@ -1,8 +1,10 @@
-package moe.vitamin.campuslink.service.search;
+package moe.vitamin.campuslink.service.search.database;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.CampusLink;
+import moe.vitamin.campuslink.service.search.ClassDataDto;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
@@ -10,6 +12,7 @@ import org.jooq.impl.DSL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalTime;
+import java.util.List;
 
 @Slf4j
 public class ClassSearchDao {
@@ -52,6 +55,9 @@ public class ClassSearchDao {
 
         // 비고
         public static final Field<String> REMARKS = DSL.field("remarks", String.class);
+
+        // 요일 (예: 월, 화, 수, 목, 금, 토, 일 -> String)
+        public static final Field<String> DAY_OF_WEEK = DSL.field("day_of_week", String.class);
     }
 
     public static void init() {
@@ -72,6 +78,7 @@ public class ClassSearchDao {
                     .column(Fields.DURATION_MINUTES)
                     .column(Fields.CLASSROOM)
                     .column(Fields.REMARKS)
+                    .column(Fields.DAY_OF_WEEK)
                     .primaryKey(Fields.COURSE_NUMBER)
                     .execute();
 
@@ -100,6 +107,7 @@ public class ClassSearchDao {
                             .durationMinutes(record.get(Fields.DURATION_MINUTES))
                             .classroom(record.get(Fields.CLASSROOM))
                             .remarks(record.get(Fields.REMARKS))
+                            .dayOfWeek(record.get(Fields.DAY_OF_WEEK))
                             .build())
                     .orElse(null);
         } catch (SQLException e) {
@@ -108,4 +116,161 @@ public class ClassSearchDao {
         }
     }
 
+    public static void saveClassData(ClassDataDto data) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            context.insertInto(DSL.table(TABLE_NAME),
+                            Fields.GRADE, Fields.CLASSIFICATION, Fields.DEPARTMENT,
+                            Fields.COURSE_NUMBER, Fields.COURSE_NAME, Fields.CREDITS,
+                            Fields.PROFESSOR, Fields.START_TIME, Fields.END_TIME,
+                            Fields.DURATION_MINUTES, Fields.CLASSROOM, Fields.REMARKS, Fields.DAY_OF_WEEK)
+                    .values(data.getGrade(), data.getClassification(), data.getDepartment(),
+                            data.getCourseNumber(), data.getCourseName(), data.getCredits(),
+                            data.getProfessor(), data.getStartTime(), data.getEndTime(),
+                            data.getDurationMinutes(), data.getClassroom(), data.getRemarks(), data.getDayOfWeek())
+                    .onDuplicateKeyUpdate()
+                    .set(Fields.GRADE, data.getGrade())
+                    .set(Fields.CLASSIFICATION, data.getClassification())
+                    .set(Fields.DEPARTMENT, data.getDepartment())
+                    .set(Fields.COURSE_NAME, data.getCourseName())
+                    .set(Fields.CREDITS, data.getCredits())
+                    .set(Fields.PROFESSOR, data.getProfessor())
+                    .set(Fields.START_TIME, data.getStartTime())
+                    .set(Fields.END_TIME, data.getEndTime())
+                    .set(Fields.DURATION_MINUTES, data.getDurationMinutes())
+                    .set(Fields.CLASSROOM, data.getClassroom())
+                    .set(Fields.REMARKS, data.getRemarks())
+                    .set(Fields.DAY_OF_WEEK, data.getDayOfWeek())
+                    .execute();
+        } catch (SQLException e) {
+            log.error("Failed to save class data for course number: {}", data.getCourseNumber(), e);
+        }
+    }
+
+    public static void batchSaveClassData(List<ClassDataDto> dataList) {
+        if (dataList == null || dataList.isEmpty()) {
+            return;
+        }
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            var queries = dataList.stream().map(data ->
+                    context.insertInto(DSL.table(TABLE_NAME),
+                                    Fields.GRADE, Fields.CLASSIFICATION, Fields.DEPARTMENT,
+                                    Fields.COURSE_NUMBER, Fields.COURSE_NAME, Fields.CREDITS,
+                                    Fields.PROFESSOR, Fields.START_TIME, Fields.END_TIME,
+                                    Fields.DURATION_MINUTES, Fields.CLASSROOM, Fields.REMARKS, Fields.DAY_OF_WEEK)
+                            .values(data.getGrade(), data.getClassification(), data.getDepartment(),
+                                    data.getCourseNumber(), data.getCourseName(), data.getCredits(),
+                                    data.getProfessor(), data.getStartTime(), data.getEndTime(),
+                                    data.getDurationMinutes(), data.getClassroom(), data.getRemarks(), data.getDayOfWeek())
+                            .onDuplicateKeyUpdate()
+                            .set(Fields.GRADE, data.getGrade())
+                            .set(Fields.CLASSIFICATION, data.getClassification())
+                            .set(Fields.DEPARTMENT, data.getDepartment())
+                            .set(Fields.COURSE_NAME, data.getCourseName())
+                            .set(Fields.CREDITS, data.getCredits())
+                            .set(Fields.PROFESSOR, data.getProfessor())
+                            .set(Fields.START_TIME, data.getStartTime())
+                            .set(Fields.END_TIME, data.getEndTime())
+                            .set(Fields.DURATION_MINUTES, data.getDurationMinutes())
+                            .set(Fields.CLASSROOM, data.getClassroom())
+                            .set(Fields.REMARKS, data.getRemarks())
+                            .set(Fields.DAY_OF_WEEK, data.getDayOfWeek())
+            ).toList();
+
+            context.batch(queries).execute();
+            log.info("Successfully batch saved {} class records.", dataList.size());
+        } catch (SQLException e) {
+            log.error("Failed to batch save class data", e);
+        }
+    }
+
+    public static List<String> getUniqueClassifications() {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            return context.selectDistinct(Fields.CLASSIFICATION)
+                    .from(DSL.table(TABLE_NAME))
+                    .where(Fields.CLASSIFICATION.isNotNull())
+                    .orderBy(Fields.CLASSIFICATION.asc())
+                    .fetchInto(String.class);
+        } catch (SQLException e) {
+            log.error("Failed to fetch unique classifications", e);
+            return List.of();
+        }
+    }
+
+    public static List<String> getUniqueDepartments() {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+            return context.selectDistinct(Fields.DEPARTMENT)
+                    .from(DSL.table(TABLE_NAME))
+                    .where(Fields.DEPARTMENT.isNotNull())
+                    .orderBy(Fields.DEPARTMENT.asc())
+                    .fetchInto(String.class);
+        } catch (SQLException e) {
+            log.error("Failed to fetch unique departments", e);
+            return List.of();
+        }
+    }
+
+    public static List<ClassDataDto> searchClasses(
+            @Nullable String classification,
+            @Nullable String department,
+            @Nullable String courseNumber,
+            @Nullable String courseName,
+            @Nullable Integer credits,
+            @Nullable String professor,
+            @Nullable String dayOfWeek
+    ) {
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            DSLContext context = DSL.using(connection);
+
+            var query = context.selectFrom(DSL.table(TABLE_NAME));
+
+            Condition conditions = DSL.noCondition();
+
+            if (classification != null && !classification.trim().isEmpty()) {
+                conditions = conditions.and(Fields.CLASSIFICATION.eq(classification));
+            }
+            if (department != null && !department.trim().isEmpty()) {
+                conditions = conditions.and(Fields.DEPARTMENT.eq(department));
+            }
+            if (courseNumber != null && !courseNumber.trim().isEmpty()) {
+                conditions = conditions.and(Fields.COURSE_NUMBER.contains(courseNumber));
+            }
+            if (courseName != null && !courseName.trim().isEmpty()) {
+                conditions = conditions.and(Fields.COURSE_NAME.contains(courseName));
+            }
+            if (credits != null) {
+                conditions = conditions.and(Fields.CREDITS.eq(credits));
+            }
+            if (professor != null && !professor.trim().isEmpty()) {
+                conditions = conditions.and(Fields.PROFESSOR.contains(professor));
+            }
+            if (dayOfWeek != null && !dayOfWeek.trim().isEmpty()) {
+                conditions = conditions.and(Fields.DAY_OF_WEEK.eq(dayOfWeek));
+            }
+
+            return query.where(conditions)
+                    .fetch()
+                    .map(record -> ClassDataDto.builder()
+                            .grade(record.get(Fields.GRADE))
+                            .classification(record.get(Fields.CLASSIFICATION))
+                            .department(record.get(Fields.DEPARTMENT))
+                            .courseNumber(record.get(Fields.COURSE_NUMBER))
+                            .courseName(record.get(Fields.COURSE_NAME))
+                            .credits(record.get(Fields.CREDITS))
+                            .professor(record.get(Fields.PROFESSOR))
+                            .startTime(record.get(Fields.START_TIME))
+                            .endTime(record.get(Fields.END_TIME))
+                            .durationMinutes(record.get(Fields.DURATION_MINUTES))
+                            .classroom(record.get(Fields.CLASSROOM))
+                            .remarks(record.get(Fields.REMARKS))
+                            .dayOfWeek(record.get(Fields.DAY_OF_WEEK))
+                            .build());
+        } catch (SQLException e) {
+            log.error("Failed to search classes", e);
+            return List.of();
+        }
+    }
 }
