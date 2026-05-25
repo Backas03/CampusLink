@@ -11,6 +11,7 @@ public class EmailCertificationData {
 
     private final String email;
     private final long discordUserId;
+    private final long guildId;
     private final LocalDateTime certifiedAt;
 
 }

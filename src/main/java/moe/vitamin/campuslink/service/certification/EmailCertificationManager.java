@@ -1,5 +1,6 @@
 package moe.vitamin.campuslink.service.certification;
 
+import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.service.certification.database.EmailCertificationDao;
 import moe.vitamin.campuslink.service.certification.database.EmailCertificationData;
 import moe.vitamin.campuslink.service.certification.result.EmailCertificationRequestResult;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class EmailCertificationManager {
 
     public static EmailCertificationManager init() {
@@ -27,41 +29,65 @@ public class EmailCertificationManager {
         this.certificationProcess = new HashMap<>();
     }
 
+    public boolean isProcessing(long discordUserId) {
+        return this.certificationProcess.containsKey(discordUserId);
+    }
+
     public CompletableFuture<EmailCertificationRequestResult> requestCertification(
-            String email,
-            User user
+            User user,
+            String email
     ) {
         if (!isValidEmail(email)) {
             return CompletableFuture.completedFuture(EmailCertificationRequestResult.INVALID_EMAIL);
         }
-        EmailCertificationProcess process = new EmailCertificationProcess(user, email);
-        this.certificationProcess.put(user.getIdLong(), process);
+        if (isProcessing(user.getIdLong())) {
+            EmailCertificationProcess process = this.certificationProcess.get(user.getIdLong());
+            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_FOR_CODE_INPUT) {
+                if (!process.isExpireFlag()) {
+                    process.setExpireFlag(true);
+                    return CompletableFuture.completedFuture(EmailCertificationRequestResult.CONFIRM_CLEAR_PROGRESS);
+                }
+                this.certificationProcess.remove(user.getIdLong());
+            }
+            log.info("{}", this.certificationProcess);
+            if (isProcessing(user.getIdLong())) {
+                return CompletableFuture.completedFuture(EmailCertificationRequestResult.PROCESSING_PREVIOUS_REQUEST);
+            }
+        }
 
         return isCertified(user).thenApply(certified -> {
             if (certified) {
                 return EmailCertificationRequestResult.ALREADY_CERTIFIED;
             }
+            EmailCertificationProcess process = new EmailCertificationProcess(user, email);
+            this.certificationProcess.put(user.getIdLong(), process);
+
             Boolean emailSendResult = process.sendVerificationEmail().join();
             if (!emailSendResult) {
                 this.certificationProcess.remove(user.getIdLong());
-                return EmailCertificationRequestResult.FAILED;
+                return EmailCertificationRequestResult.EMAIL_SEND_FAILED;
             }
             return EmailCertificationRequestResult.SUCCESS;
         });
     }
 
-    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(User user, String code) {
+    public CompletableFuture<EmailCertificationVerificationResult> verifyCode(User user, String code, long guildId) {
         EmailCertificationProcess process = this.certificationProcess.get(user.getIdLong());
         if (process == null) {
             return CompletableFuture.completedFuture(EmailCertificationVerificationResult.NOT_IN_PROGRESS);
         }
-        return process.verifyCode(code).thenApply(result -> {
-            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH) {
+        return process.verifyCode(code, guildId).thenApply(result -> {
+            if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH
+                    || result == EmailCertificationVerificationResult.TIMEOUT
+                    || result == EmailCertificationVerificationResult.SUCCESS) {
                 this.certificationProcess.remove(user.getIdLong());
+                log.info("Email certification process for user {} has been removed due to status {} or verification result {}",
+                        user.getIdLong(), process.getStatus(), result);
             }
             return result;
         });
     }
+
 
     public boolean isValidEmail(String email) {
         return emailPattern.matcher(email).matches();

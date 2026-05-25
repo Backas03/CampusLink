@@ -15,6 +15,8 @@ import java.net.URISyntaxException;
 @Slf4j
 public class CampusLink {
 
+    public static final String VERSION = "CampusLink/1.0.0-SNAPSHOT";
+
     @Getter
     private static CampusLink instance;
 
