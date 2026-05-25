@@ -8,6 +8,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,7 +31,10 @@ public class ClassSearchDao {
         public static final Field<String> DEPARTMENT = DSL.field("department", String.class);
 
         // 수강번호 (보통 학수번호나 강좌코드는 String이나 Long을 사용합니다)
-        public static final Field<String> COURSE_NUMBER = DSL.field("course_number", String.class);
+        public static final Field<String> COURSE_NUMBER = DSL.field(
+                DSL.name("course_number"),
+                SQLDataType.VARCHAR(255).notNull()
+        );
 
         // 교과목명
         public static final Field<String> COURSE_NAME = DSL.field("course_name", String.class);
@@ -42,10 +46,16 @@ public class ClassSearchDao {
         public static final Field<String> PROFESSOR = DSL.field("professor", String.class);
 
         // 강의 시작 시간 (시/분 포함, 예: 09:30:00)
-        public static final Field<LocalTime> START_TIME = DSL.field("start_time", LocalTime.class);
+        public static final Field<LocalTime> START_TIME = DSL.field(
+                DSL.name("start_time"),
+                SQLDataType.LOCALTIME
+        );
 
         // 강의 종료 시간 (시/분 포함, 예: 11:15:00)
-        public static final Field<LocalTime> END_TIME = DSL.field("end_time", LocalTime.class);
+        public static final Field<LocalTime> END_TIME = DSL.field(
+                DSL.name("end_time"),
+                SQLDataType.LOCALTIME
+        );
 
         // 소요 시간 (예: 75분 -> Integer로 분 단위 저장)
         public static final Field<Integer> DURATION_MINUTES = DSL.field("duration_minutes", Integer.class);
@@ -91,7 +101,13 @@ public class ClassSearchDao {
     public static ClassDataDto findByCourseNumber(String courseNumber) {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
-            return context.selectFrom(DSL.table(TABLE_NAME))
+            return context.select(
+                            Fields.GRADE, Fields.CLASSIFICATION, Fields.DEPARTMENT,
+                            Fields.COURSE_NUMBER, Fields.COURSE_NAME, Fields.CREDITS,
+                            Fields.PROFESSOR, Fields.START_TIME, Fields.END_TIME,
+                            Fields.DURATION_MINUTES, Fields.CLASSROOM, Fields.REMARKS, Fields.DAY_OF_WEEK
+                    )
+                    .from(DSL.table(TABLE_NAME))
                     .where(Fields.COURSE_NUMBER.eq(courseNumber))
                     .fetchOptional()
                     .map(record -> ClassDataDto.builder()
@@ -225,7 +241,12 @@ public class ClassSearchDao {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
 
-            var query = context.selectFrom(DSL.table(TABLE_NAME));
+            var query = context.select(
+                    Fields.GRADE, Fields.CLASSIFICATION, Fields.DEPARTMENT,
+                    Fields.COURSE_NUMBER, Fields.COURSE_NAME, Fields.CREDITS,
+                    Fields.PROFESSOR, Fields.START_TIME, Fields.END_TIME,
+                    Fields.DURATION_MINUTES, Fields.CLASSROOM, Fields.REMARKS, Fields.DAY_OF_WEEK
+            ).from(DSL.table(TABLE_NAME));
 
             Condition conditions = DSL.noCondition();
 

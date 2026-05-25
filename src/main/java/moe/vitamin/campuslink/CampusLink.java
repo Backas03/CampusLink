@@ -7,6 +7,7 @@ import moe.vitamin.campuslink.config.YamlConfigLoadException;
 import moe.vitamin.campuslink.database.HikariPoolManager;
 import moe.vitamin.campuslink.discord.Sora;
 import moe.vitamin.campuslink.service.certification.EmailCertificationManager;
+import moe.vitamin.campuslink.service.search.ClassSearchManager;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -40,6 +41,7 @@ public class CampusLink {
 
     private Sora sora;
     private EmailCertificationManager emailCertificationManager;
+    private ClassSearchManager classSearchManager;
 
     private CampusLink() throws YamlConfigLoadException {
         this.configManager = new ConfigManager();
@@ -53,6 +55,7 @@ public class CampusLink {
                 .setConfig(configManager.getSoraConfig())
                 .build();
         this.emailCertificationManager = EmailCertificationManager.init();
+        this.classSearchManager = ClassSearchManager.init();
     }
 
     public void close() {
