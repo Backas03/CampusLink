@@ -8,7 +8,6 @@ public interface ChatCommandSource extends CommandSource {
 
     void onTriggered(MessageReceivedEvent event);
 
-    // TODO: add permission supports?
 
     default String getArgument(String input, int index) {
         String[] split = input.split(COMMAND_SPLIT_IDENTIFIER);

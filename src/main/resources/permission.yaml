@@ -1,0 +1,9 @@
+roles:
+  admin:
+    permissions:
+      - "*"
+    users:
+      - "123456789012345678"
+  user:
+    permissions:
+      - "campuslink.user.basic"

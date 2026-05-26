@@ -8,4 +8,8 @@ public interface CommandSource {
 
     @Nullable String getUsage();
 
+    @Nullable default String getPermissionNode() {
+        return null;
+    }
+
 }
