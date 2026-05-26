@@ -56,7 +56,7 @@ public class EmailCertificationManager {
             }
         }
 
-        return isCertified(user, guildId).thenApply(certified -> {
+        return isCertified(user.getIdLong(), guildId).thenApply(certified -> {
             if (certified) {
                 return EmailCertificationRequestResult.ALREADY_CERTIFIED;
             }
@@ -95,9 +95,9 @@ public class EmailCertificationManager {
         return emailPattern.matcher(email).matches();
     }
 
-    public CompletableFuture<Boolean> isCertified(User user, long guildId) {
+    public CompletableFuture<Boolean> isCertified(long discordUserId, long guildId) {
         return CompletableFuture.supplyAsync(() -> {
-            EmailCertificationData data = EmailCertificationDao.loadCertificationData(user.getIdLong(), guildId);
+            EmailCertificationData data = EmailCertificationDao.loadCertificationData(discordUserId, guildId);
             return data != null;
         });
     }
