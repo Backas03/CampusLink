@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.config.ConfigManager;
 import moe.vitamin.campuslink.config.YamlConfigLoadException;
+import moe.vitamin.campuslink.permission.PermissionManager;
 import moe.vitamin.campuslink.database.HikariPoolManager;
 import moe.vitamin.campuslink.discord.Sora;
 import moe.vitamin.campuslink.service.certification.EmailCertificationManager;
@@ -38,6 +39,7 @@ public class CampusLink {
 
     private final ConfigManager configManager;
     private final HikariPoolManager hikariPoolManager;
+    private final PermissionManager permissionManager;
 
     private Sora sora;
     private EmailCertificationManager emailCertificationManager;
@@ -48,6 +50,8 @@ public class CampusLink {
         this.configManager.reload();
 
         this.hikariPoolManager = new HikariPoolManager(configManager.loadDatabaseConfig());
+        this.permissionManager = new PermissionManager();
+        this.permissionManager.reload(this.configManager.getPermissionConfig());
     }
 
     private void loadServices() {
