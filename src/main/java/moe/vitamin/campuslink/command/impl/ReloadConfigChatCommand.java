@@ -20,6 +20,7 @@ public class ReloadConfigChatCommand implements ChatCommandSource {
                     CompletableFuture.runAsync(() -> {
                         try {
                             CampusLink.getInstance().getConfigManager().reload();
+                            CampusLink.getInstance().getPermissionManager().reload(CampusLink.getInstance().getConfigManager().getPermissionConfig());
                             long duration = System.currentTimeMillis() - start;
 
                             message.editMessage("데이터 리로드가 완료되었습니다. (소요 시간: " + duration + "ms)").queue();
@@ -42,5 +43,11 @@ public class ReloadConfigChatCommand implements ChatCommandSource {
     @Override
     public String getUsage() {
         return "reload";
+    }
+
+    @Nullable
+    @Override
+    public String getPermissionNode() {
+        return "campuslink.command.reload";
     }
 }
