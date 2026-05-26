@@ -35,7 +35,8 @@ public class EmailCertificationManager {
 
     public CompletableFuture<EmailCertificationRequestResult> requestCertification(
             User user,
-            String email
+            String email,
+            long guildId
     ) {
         if (!isValidEmail(email)) {
             return CompletableFuture.completedFuture(EmailCertificationRequestResult.INVALID_EMAIL);
@@ -55,7 +56,7 @@ public class EmailCertificationManager {
             }
         }
 
-        return isCertified(user).thenApply(certified -> {
+        return isCertified(user.getIdLong(), guildId).thenApply(certified -> {
             if (certified) {
                 return EmailCertificationRequestResult.ALREADY_CERTIFIED;
             }
@@ -79,9 +80,10 @@ public class EmailCertificationManager {
         return process.verifyCode(code, guildId).thenApply(result -> {
             if (process.getStatus() == EmailCertificationProcess.Status.WAITING_TO_FLUSH
                     || result == EmailCertificationVerificationResult.TIMEOUT
+                    || result == EmailCertificationVerificationResult.EXPIRED
                     || result == EmailCertificationVerificationResult.SUCCESS) {
                 this.certificationProcess.remove(user.getIdLong());
-                log.info("Email certification process for user {} has been removed due to status {} or verification result {}",
+                log.info("Email certification process for user {} has been removed. process_status={}, verification_result={}",
                         user.getIdLong(), process.getStatus(), result);
             }
             return result;
@@ -93,9 +95,9 @@ public class EmailCertificationManager {
         return emailPattern.matcher(email).matches();
     }
 
-    public CompletableFuture<Boolean> isCertified(User user) {
+    public CompletableFuture<Boolean> isCertified(long discordUserId, long guildId) {
         return CompletableFuture.supplyAsync(() -> {
-            EmailCertificationData data = EmailCertificationDao.loadCertificationData(user.getIdLong());
+            EmailCertificationData data = EmailCertificationDao.loadCertificationData(discordUserId, guildId);
             return data != null;
         });
     }

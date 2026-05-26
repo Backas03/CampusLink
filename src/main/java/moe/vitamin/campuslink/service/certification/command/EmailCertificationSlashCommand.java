@@ -39,7 +39,8 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
 
     @Override
     public void onTriggered(SlashCommandInteractionEvent event) {
-        if (event.getGuild() == null) {
+        var guild = event.getGuild();
+        if (guild == null) {
             event.reply("DM 채널에서는 사용할 수 없는 명령어입니다.").queue();
             return;
         }
@@ -53,11 +54,11 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
         String optionName = option.getName();
         switch (optionName) {
             case COMMAND_ARGUMENT_EMAIL -> {
-                event.deferReply().queue(interactionHook -> {
+                event.deferReply().setEphemeral(true).queue(interactionHook -> {
                     String email = option.getAsString();
                     CampusLink.getInstance()
                             .getEmailCertificationManager()
-                            .requestCertification(user, email)
+                            .requestCertification(user, email, guild.getIdLong())
                             .thenAccept(result -> {
                                 boolean success = result.replyEmbeds(event);
                                 if (!success) {
@@ -68,7 +69,7 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
 
             }
             case COMMAND_ARGUMENT_CODE -> {
-                event.deferReply().queue(interactionHook -> {
+                event.deferReply().setEphemeral(true).queue(interactionHook -> {
                     String code = option.getAsString();
                     CampusLink.getInstance()
                             .getEmailCertificationManager()
@@ -86,7 +87,9 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setColor(Color.decode("#0ee111"))
                                                 .setTimestamp(LocalDateTime.now())
                                                 .setFooter(CampusLink.VERSION);
-                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                        interactionHook
+                                                .editOriginalEmbeds(builder.build())
+                                                .queue();
                                     }
                                     case INVALID_CODE -> {
                                         EmbedBuilder builder = new EmbedBuilder()
@@ -94,7 +97,9 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setTitle("인증에 실패했습니다.")
                                                 .addField("인증 코드가 일치하지 않습니다.", "코드를 다시 입력하거나 재인증을 원하시면 /인증 명령어를 다시 입력해주세요.", false)
                                                 .setFooter(CampusLink.VERSION);
-                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                        interactionHook
+                                                .editOriginalEmbeds(builder.build())
+                                                .queue();
                                     }
                                     case EXPIRED -> {
                                         EmbedBuilder builder = new EmbedBuilder()
@@ -102,7 +107,9 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setTitle("인증에 실패했습니다.")
                                                 .addField("인증 코드의 유효 기간이 만료되었습니다.", "재인증을 원하시면 /인증 email:[이메일] 명령어를 다시 입력해주세요.", false)
                                                 .setFooter(CampusLink.VERSION);
-                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                        interactionHook
+                                                .editOriginalEmbeds(builder.build())
+                                                .queue();
                                     }
                                     case NOT_IN_PROGRESS -> {
                                         EmbedBuilder builder = new EmbedBuilder()
@@ -110,7 +117,9 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setTitle("인증에 실패했습니다.")
                                                 .addField("인증 진행 중인 요청이 없습니다.", "인증을 진행하려면 /인증 email:[이메일] 명령어를 입력해주세요.", false)
                                                 .setFooter(CampusLink.VERSION);
-                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                        interactionHook
+                                                .editOriginalEmbeds(builder.build())
+                                                .queue();
                                     }
                                     case null, default -> {
                                         EmbedBuilder builder = new EmbedBuilder()
@@ -118,17 +127,21 @@ public class EmailCertificationSlashCommand implements SlashCommandSource {
                                                 .setTitle("인증에 실패했습니다.")
                                                 .addField("인증 과정에서 오류가 발생했습니다.", "잠시 후 다시 시도해주세요.", false)
                                                 .setFooter(CampusLink.VERSION);
-                                        interactionHook.editOriginalEmbeds(builder.build()).queue();
+                                        interactionHook
+                                                .editOriginalEmbeds(builder.build())
+                                                .queue();
                                     }
                                 }
                             }).exceptionally(e -> {
                                 log.error("Failed to verify email certification code for user {}", user.getIdLong(), e);
-                                interactionHook.editOriginalEmbeds(new EmbedBuilder()
-                                        .setColor(Color.decode("#d90000"))
-                                        .setTitle("인증에 실패했습니다.")
-                                        .addField("인증 과정에서 오류가 발생했습니다.", "잠시 후 다시 시도해주세요.", false)
-                                        .setFooter(CampusLink.VERSION)
-                                        .build()).queue();
+                                interactionHook
+                                        .editOriginalEmbeds(new EmbedBuilder()
+                                                .setColor(Color.decode("#d90000"))
+                                                .setTitle("인증에 실패했습니다.")
+                                                .addField("인증 과정에서 오류가 발생했습니다.", "잠시 후 다시 시도해주세요.", false)
+                                                .setFooter(CampusLink.VERSION)
+                                                .build()
+                                        ).queue();
                                 return null;
                             });
                 });

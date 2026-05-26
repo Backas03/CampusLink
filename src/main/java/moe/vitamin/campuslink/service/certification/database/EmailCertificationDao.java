@@ -5,7 +5,6 @@ import moe.vitamin.campuslink.CampusLink;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Publisher;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
@@ -52,6 +51,7 @@ public class EmailCertificationDao {
             context.createTableIfNotExists(TABLE_NAME)
                     .column(Fields.EMAIL)
                     .column(Fields.DISCORD_USER_ID)
+                    .column(Fields.CERTIFIED_GUILD_AT)
                     .column(Fields.CERTIFIED_AT)
                     .primaryKey(Fields.EMAIL, Fields.DISCORD_USER_ID)
                     .execute();
@@ -61,12 +61,12 @@ public class EmailCertificationDao {
     }
 
     @Nullable
-    public static EmailCertificationData loadCertificationData(long discordUserId) {
+    public static EmailCertificationData loadCertificationData(long discordUserId, long guildId) {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
             var record = context.select(Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_GUILD_AT, Fields.CERTIFIED_AT)
                     .from(TABLE_NAME)
-                    .where(Fields.DISCORD_USER_ID.eq(discordUserId))
+                    .where(Fields.DISCORD_USER_ID.eq(discordUserId).and(Fields.CERTIFIED_GUILD_AT.eq(guildId)))
                     .fetch();
             if (record.isEmpty()) {
                 return null;
@@ -117,10 +117,8 @@ public class EmailCertificationDao {
         try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
             DSLContext context = DSL.using(connection);
             context.insertInto(DSL.table(TABLE_NAME),
-                            Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_AT)
-                    .values(data.getEmail(), data.getDiscordUserId(), data.getCertifiedAt())
-                    .onDuplicateKeyUpdate()
-                    .set(Fields.CERTIFIED_AT, data.getCertifiedAt())
+                            Fields.EMAIL, Fields.DISCORD_USER_ID, Fields.CERTIFIED_GUILD_AT, Fields.CERTIFIED_AT)
+                    .values(data.getEmail(), data.getDiscordUserId(), data.getGuildId(), data.getCertifiedAt())
                     .execute();
         } catch (SQLException e) {
             log.error("Failed to save email certification data for discord user id: {}", data.getDiscordUserId(), e);
