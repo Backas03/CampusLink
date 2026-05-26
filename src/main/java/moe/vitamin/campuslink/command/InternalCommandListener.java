@@ -8,8 +8,12 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.Color;
+
+import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -18,7 +22,21 @@ public class InternalCommandListener extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         consumeSlashCommandSourceIfExists(event.getName(),
-                source -> source.onTriggered(event));
+                source -> {
+                    String permissionNode = source.getPermissionNode();
+                    if (permissionNode != null && !CampusLink.getInstance().getPermissionManager()
+                            .hasPermission(event.getUser(), permissionNode)) {
+                        event.replyEmbeds(new EmbedBuilder()
+                                .setColor(Color.decode("#d90000"))
+                                .setTitle("명령어 실행이 거부되었습니다")
+                                .addField("사유", "이 명령어를 실행할 권한이 없습니다.", false)
+                                .setFooter(CampusLink.VERSION)
+                                .setTimestamp(LocalDateTime.now())
+                                .build()).setEphemeral(true).queue();
+                        return;
+                    }
+                    source.onTriggered(event);
+                });
         log.info("Slash command triggered. command={}, user={}", event.getFullCommandName(), event.getUser());
     }
 
@@ -50,6 +68,20 @@ public class InternalCommandListener extends ListenerAdapter {
         if (commandSource == null) {
             return;
         }
+
+        String permissionNode = commandSource.getPermissionNode();
+        if (permissionNode != null
+                && !CampusLink.getInstance().getPermissionManager().hasPermission(event.getAuthor(), permissionNode)) {
+            event.getMessage().replyEmbeds(new EmbedBuilder()
+                    .setColor(Color.decode("#d90000"))
+                    .setTitle("명령어 실행이 거부되었습니다")
+                    .addField("사유", "이 명령어를 실행할 권한이 없습니다.", false)
+                    .setFooter(CampusLink.VERSION)
+                    .setTimestamp(LocalDateTime.now())
+                    .build()).queue();
+            return;
+        }
+
         commandSource.onTriggered(event);
         log.info("Chat command triggered. input={}, user={}, command={}", content, event.getAuthor(), commandSource);
     }
