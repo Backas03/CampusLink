@@ -2,6 +2,7 @@ package moe.vitamin.campuslink.service.search;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.vitamin.campuslink.CampusLink;
+import moe.vitamin.campuslink.command.impl.ClassImportSlashCommand;
 import moe.vitamin.campuslink.command.impl.ClassSearchSlashCommand;
 import moe.vitamin.campuslink.service.search.database.ClassSearchDao;
 
@@ -37,20 +38,25 @@ public class ClassSearchManager {
                 .getSora()
                 .getCommandManager()
                 .registerSlashCommand(new ClassSearchSlashCommand(this));
+        CampusLink.getInstance()
+                .getSora()
+                .getCommandManager()
+                .registerSlashCommand(new ClassImportSlashCommand(this));
     }
 
     private static final Pattern TIME_PATTERN = Pattern.compile("([월화수목금토일])\\((\\d{2}:\\d{2})~(\\d{2}:\\d{2})\\)");
 
-    public static void importCsv(File file) {
+    public static int importCsv(File file) {
         List<ClassDataDto> classList = parseCsv(file);
         if (classList == null || classList.isEmpty()) {
             log.warn("No classes parsed or CSV file is invalid.");
-            return;
+            return 0;
         }
 
         log.info("Parsed {} classes. Inserting to DB...", classList.size());
         ClassSearchDao.batchSaveClassData(classList);
         log.info("Database insertion completed successfully.");
+        return classList.size();
     }
 
     public static List<ClassDataDto> parseCsv(File file) {
