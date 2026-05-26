@@ -89,12 +89,13 @@ public enum EmailCertificationRequestResult {
             return false;
         }
         EmbedBuilder builder = replyEmbedMessageBuilderFunction.apply(interaction);
-        interaction.getHook().editOriginalEmbeds(builder.build()).queue(message -> {
-            if (interactionHookConsumer != null) {
-                interactionHookConsumer.accept(builder, interaction.getHook());
-            }
-        });
-
+        interaction.getHook().setEphemeral(true)
+                .editOriginalEmbeds(builder.build())
+                .queue(message -> {
+                    if (interactionHookConsumer != null) {
+                        interactionHookConsumer.accept(builder, interaction.getHook().setEphemeral(true));
+                    }
+                });
         return true;
     }
 

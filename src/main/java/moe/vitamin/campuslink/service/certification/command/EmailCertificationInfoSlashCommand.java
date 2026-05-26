@@ -23,9 +23,14 @@ public class EmailCertificationInfoSlashCommand implements SlashCommandSource {
 
     @Override
     public void onTriggered(SlashCommandInteractionEvent event) {
-        event.deferReply().queue(hook -> {
+        var guild = event.getGuild();
+        if (guild == null) {
+            event.reply("DM 에서는 이 명령어를 사용할 수 없습니다.").queue();
+            return;
+        }
+        event.deferReply().setEphemeral(true).queue(hook -> {
             CompletableFuture.runAsync(() -> {
-                EmailCertificationData data = EmailCertificationDao.loadCertificationData(event.getUser().getIdLong());
+                EmailCertificationData data = EmailCertificationDao.loadCertificationData(event.getUser().getIdLong(), guild.getIdLong());
                 if (data == null) {
                     hook.editOriginalEmbeds(new EmbedBuilder()
                             .setTitle("인증 정보를 찾을 수 없습니다.")
