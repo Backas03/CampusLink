@@ -6,6 +6,7 @@ import moe.vitamin.campuslink.CampusLink;
 import moe.vitamin.campuslink.config.impl.CertificationConfig;
 import moe.vitamin.campuslink.config.impl.DatabaseConfig;
 import moe.vitamin.campuslink.config.impl.EmailConfig;
+import moe.vitamin.campuslink.config.impl.PermissionConfig;
 import moe.vitamin.campuslink.config.impl.SoraConfig;
 import moe.vitamin.campuslink.config.yaml.YamlConfig;
 
@@ -18,9 +19,14 @@ public class ConfigManager {
     private SoraConfig soraConfig;
     private EmailConfig emailConfig;
     private CertificationConfig certificationConfig;
+    private PermissionConfig permissionConfig;
 
     public SoraConfig loadSoraConfig() throws YamlConfigLoadException {
         return loadConfig(getSoraConfigFile(), SoraConfig.class);
+    }
+
+    public PermissionConfig loadPermissionConfig() throws YamlConfigLoadException {
+        return loadConfig(getPermissionConfigFile(), PermissionConfig.class);
     }
 
     public EmailConfig loadEmailConfig() throws YamlConfigLoadException {
@@ -37,10 +43,12 @@ public class ConfigManager {
 
     public void reload() throws YamlConfigLoadException {
         createResourceIfNotExists(getDatabaseConfigFile());
+        createResourceIfNotExists(getPermissionConfigFile());
 
         this.soraConfig = loadSoraConfig();
         this.emailConfig = loadEmailConfig();
         this.certificationConfig = loadCertificationConfig();
+        this.permissionConfig = loadPermissionConfig();
     }
 
     private <T extends YamlConfig> T loadConfig(File file, Class<T> configClass) throws YamlConfigLoadException {
@@ -69,6 +77,10 @@ public class ConfigManager {
 
     public File getDatabaseConfigFile() {
         return new File(getConfigFolder(), "database.yaml");
+    }
+
+    public File getPermissionConfigFile() {
+        return new File(getConfigFolder(), "permission.yaml");
     }
 
     public File getConfigFolder() {
