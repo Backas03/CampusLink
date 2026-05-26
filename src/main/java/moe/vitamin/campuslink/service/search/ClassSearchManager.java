@@ -12,6 +12,7 @@ public class ClassSearchManager {
 
     public static ClassSearchManager init() {
         ClassSearchDao.init();
+        ClassSearchDao.syncWithCsvFiles();
         return new ClassSearchManager();
     }
 

@@ -10,10 +10,17 @@ import org.jooq.Field;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class ClassSearchDao {
@@ -225,5 +232,171 @@ public class ClassSearchDao {
             log.error("Failed to search classes", e);
             return List.of();
         }
+    }
+
+    public static void syncWithCsvFiles() {
+        File dataFolder = CampusLink.getDataFolder();
+        if (dataFolder == null) {
+            log.warn("Data folder is null, skipping CSV synchronization.");
+            return;
+        }
+        File coursesDir = new File(dataFolder, "courses");
+        if (!coursesDir.exists()) {
+            if (coursesDir.mkdirs()) {
+                log.info("Created courses directory at {}", coursesDir.getAbsolutePath());
+            } else {
+                log.error("Failed to create courses directory at {}", coursesDir.getAbsolutePath());
+                return;
+            }
+        }
+
+        File[] files = coursesDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".csv"));
+        if (files == null || files.length == 0) {
+            log.info("No CSV files found in courses directory: {}", coursesDir.getAbsolutePath());
+            return;
+        }
+
+        log.info("Found {} CSV files in courses directory. Starting synchronization...", files.length);
+
+        try (Connection connection = CampusLink.getInstance().getHikariPoolManager().getConnection()) {
+            log.info("Starting database transaction for CSV course synchronization...");
+            connection.setAutoCommit(false);
+            try {
+                DSLContext context = DSL.using(connection);
+
+                // Empty the class_search table for clean sync
+                context.deleteFrom(DSL.table(TABLE_NAME)).execute();
+                log.info("Cleared existing records in {}", TABLE_NAME);
+
+                int totalInserted = 0;
+                Pattern timePattern = Pattern.compile("([월화수목금토일])\\((\\d{2}:\\d{2})[-~](\\d{2}:\\d{2})\\)");
+                List<org.jooq.Query> queries = new ArrayList<>();
+
+                for (File file : files) {
+                    log.info("Parsing CSV file: {}", file.getName());
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+                        String headerLine = br.readLine(); // Skip header
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            if (line.trim().isEmpty()) continue;
+                            List<String> columns = parseCsvLine(line);
+                            if (columns.size() < 4) { // Needs at least course number at index 3
+                                continue;
+                            }
+
+                            String classification = columns.size() > 0 ? columns.get(0) : "";
+                            String gradeStr = columns.size() > 1 ? columns.get(1) : "";
+                            String department = columns.size() > 2 ? columns.get(2) : "";
+                            String courseNumber = columns.size() > 3 ? columns.get(3) : "";
+                            String courseName = columns.size() > 4 ? columns.get(4) : "";
+                            String creditsStr = columns.size() > 5 ? columns.get(5) : "";
+                            String hoursStr = columns.size() > 6 ? columns.get(6) : ""; // not stored directly
+                            String professor = columns.size() > 7 ? columns.get(7) : "";
+                            String classTime = columns.size() > 8 ? columns.get(8) : "";
+                            String classroom = columns.size() > 9 ? columns.get(9) : "";
+                            String remarks = columns.size() > 11 ? columns.get(11) : "";
+
+                            if (courseNumber == null || courseNumber.trim().isEmpty()) {
+                                continue;
+                            }
+
+                            Integer grade = null;
+                            try {
+                                if (gradeStr != null && !gradeStr.trim().isEmpty()) {
+                                    grade = Integer.parseInt(gradeStr.trim());
+                                }
+                            } catch (NumberFormatException ignored) {}
+
+                            Integer credits = null;
+                            try {
+                                if (creditsStr != null && !creditsStr.trim().isEmpty()) {
+                                    credits = Integer.parseInt(creditsStr.trim());
+                                }
+                            } catch (NumberFormatException ignored) {}
+
+                            // Parse time fields
+                            String dayOfWeek = null;
+                            LocalTime startTime = null;
+                            LocalTime endTime = null;
+                            Integer durationMinutes = null;
+
+                            if (classTime != null && !classTime.trim().isEmpty()) {
+                                Matcher matcher = timePattern.matcher(classTime);
+                                if (matcher.find()) {
+                                    dayOfWeek = matcher.group(1);
+                                    try {
+                                        startTime = LocalTime.parse(matcher.group(2));
+                                        endTime = LocalTime.parse(matcher.group(3));
+                                        durationMinutes = (int) java.time.temporal.ChronoUnit.MINUTES.between(startTime, endTime);
+                                    } catch (Exception ignored) {}
+                                }
+                            }
+
+                            queries.add(context.insertInto(DSL.table(TABLE_NAME))
+                                    .set(Fields.GRADE, grade)
+                                    .set(Fields.CLASSIFICATION, classification)
+                                    .set(Fields.DEPARTMENT, department)
+                                    .set(Fields.COURSE_NUMBER, courseNumber)
+                                    .set(Fields.COURSE_NAME, courseName)
+                                    .set(Fields.CREDITS, credits)
+                                    .set(Fields.PROFESSOR, professor)
+                                    .set(Fields.START_TIME, startTime)
+                                    .set(Fields.END_TIME, endTime)
+                                    .set(Fields.DURATION_MINUTES, durationMinutes)
+                                    .set(Fields.CLASSROOM, classroom)
+                                    .set(Fields.REMARKS, remarks)
+                                    .set(Fields.DAY_OF_WEEK, dayOfWeek)
+                                    .onDuplicateKeyIgnore()
+                            );
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to parse CSV file: {}", file.getName(), e);
+                    }
+                }
+
+                if (!queries.isEmpty()) {
+                    int batchSize = 1000;
+                    for (int i = 0; i < queries.size(); i += batchSize) {
+                        List<org.jooq.Query> subList = queries.subList(i, Math.min(i + batchSize, queries.size()));
+                        int[] results = context.batch(subList).execute();
+                        for (int res : results) {
+                            if (res > 0) totalInserted += res;
+                        }
+                    }
+                }
+
+                log.info("Committing database transaction for course synchronization...");
+                connection.commit();
+                log.info("Successfully synchronized {} courses with the database.", totalInserted);
+            } catch (Exception e) {
+                log.error("Error occurred during course synchronization. Initiating transaction rollback...", e);
+                connection.rollback();
+                log.info("Database transaction successfully rolled back.");
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            log.error("Failed to synchronize courses from CSV. Transaction rolled back, previous database records preserved.", e);
+        }
+    }
+
+    private static List<String> parseCsvLine(String line) {
+        List<String> result = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                result.add(sb.toString().trim());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        result.add(sb.toString().trim());
+        return result;
     }
 }
