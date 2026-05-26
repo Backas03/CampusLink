@@ -16,7 +16,7 @@ import java.net.URISyntaxException;
 @Slf4j
 public class CampusLink {
 
-    public static final String VERSION = "CampusLink/1.0.0-SNAPSHOT";
+    public static final String VERSION = "CampusLink/1.0.1-SNAPSHOT";
 
     @Getter
     private static CampusLink instance;
@@ -26,7 +26,8 @@ public class CampusLink {
             instance = new CampusLink();
             instance.loadServices();
         } catch (YamlConfigLoadException e) {
-            log.error("Failed to load config file: {}. Please check your file and try load manually again.", e.getFile(), e);
+            log.error("Failed to load config file: {}. Please check your file and try load manually again.",
+                    e.getFile(), e);
         } finally {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (instance != null) {
@@ -59,7 +60,8 @@ public class CampusLink {
     }
 
     public void close() {
-        if (hikariPoolManager != null) hikariPoolManager.close();
+        if (hikariPoolManager != null)
+            hikariPoolManager.close();
     }
 
     public static File getDataFolder() {
