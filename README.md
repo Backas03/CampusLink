@@ -17,7 +17,7 @@
 ---
 
 ## 🛠 기술 스택
-
+Third Party Licenses 에 대해서는 [Third Party Licenses](./THIRD-PARTY-LICENSES) 를 참고하세요.
 *   **언어 및 플랫폼**: Java 21+
 *   **빌드 도구**: Gradle (Kotlin DSL, ShadowJar 빌드 지원)
 *   **디스코드 API**: [JDA (Java Discord API) v6.4.1](https://github.com/discord-jda/JDA)
