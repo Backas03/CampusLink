@@ -1,0 +1,49 @@
+This application clusters and uses third-party libraries. 
+Below are the licenses for the open-source software used in this project.
+
+--------------------------------------------------------------------------------
+1. Project Lombok (org.projectlombok:lombok)
+   - License: MIT License
+   - URL: https://projectlombok.org/
+
+2. JDA (net.dv8tion:JDA)
+   - License: Apache License 2.0
+   - URL: https://github.com/discord-jda/JDA
+
+3. jOOQ Open Source Edition (org.jooq:jooq)
+   - License: Apache License 2.0
+   - URL: https://www.jooq.org/
+
+4. HikariCP (com.zaxxer:HikariCP)
+   - License: Apache License 2.0
+   - URL: https://github.com/brettwooldridge/HikariCP
+
+5. MySQL Connector/J (com.mysql:mysql-connector-j)
+   - License: GNU General Public License v2.0 (with FOSS License Exception)
+   - URL: https://github.com/mysql/mysql-connector-j
+
+6. SnakeYAML (org.yaml:snakeyaml)
+   - License: Apache License 2.0
+   - URL: https://bitbucket.org/snakeyaml/snakeyaml
+
+7. Angus Mail (org.eclipse.angus:angus-mail)
+   - License: Eclipse Public License v2.0 / GNU General Public License v2.0 with Classpath Exception
+   - URL: https://github.com/eclipse-ee4j/angus-mail
+
+8. SLF4J (org.slf4j:slf4j-api)
+   - License: MIT License
+   - URL: https://www.slf4j.org/
+
+9. Logback (ch.qos.logback:logback-classic)
+   - License: Eclipse Public License v1.0 / GNU Lesser General Public License v2.1
+   - URL: https://logback.qos.ch/
+
+10. JUnit 5 (org.junit.jupiter:junit-jupiter, etc.)
+    - License: Eclipse Public License v2.0
+    - URL: https://junit.org/junit5/
+--------------------------------------------------------------------------------
+
+- Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0.txt
+- MIT License: https://opensource.org/licenses/MIT
+- Eclipse Public License 2.0: https://www.eclipse.org/legal/epl-2.0/
+- GNU General Public License v2.0: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
